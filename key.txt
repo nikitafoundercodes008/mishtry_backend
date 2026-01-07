@@ -1,0 +1,1 @@
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKR4y7Eu5OsLFl8H2nOSyFE3MkwX2+eDtJISI/9jOOQW nikita@foundercodes.com

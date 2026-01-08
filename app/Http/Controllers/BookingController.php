@@ -428,7 +428,159 @@ public function rechargehistory($userId)
     }
 }
 
+public function paidbookingFive(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'user_id' => 'required|exists:user_details,id',
+        'quantity' => 'nullable',
+        'service_id' => 'required',
+        'address' => 'required|string',
+        'description' => 'required|string',
+        'booking_date' => 'required',
+        'price' => 'nullable',
+        'discount' => 'nullable',
+        'sub_total' => 'nullable',
+        'tax' => 'nullable',
+        'total_amount' => 'nullable',
+        'payment_through' => 'nullable|in:1,2',
+        'handyman_id' => 'nullable',
+    ]);
 
+    if ($validator->fails()) {
+        return response()->json([
+            'errors' => $validator->errors(),
+            'message' => 'Booking Not Created',
+        ], 200);
+    }
+
+    // Generate a random transaction ID
+    $date = date('YmdHis');
+    $rand = rand(11111, 99999);
+    $transactionId = $date . $rand;
+
+    if ($request->payment_through == 1) {
+        $userId = $request->user_id;
+        $orderId = $transactionId;  // Using the generated transaction ID
+
+        // Get user details
+        $user = DB::table('user_details')->where('id', $userId)->first();
+
+        if ($user) {
+            // Prepare parameters for the external payment API request
+           $cash = round($request->total_amount);
+           
+            $postParameter = [
+                'merchantid' => "INDIANPAY00INDIANPAY0066",
+                'orderid' => $orderId,
+                'amount' => $cash,
+                'name' => $user->full_name,
+                'email' => $user->email,
+                'mobile' => $user->phone,
+                'remark' => 'payIn',
+                'type' => $cash,
+                'redirect_url' =>"https://handyman.mobileappdemo.net/api/check_payment?transaction_id=$transactionId"
+            ];
+
+            // Call payment gateway via cURL
+            $curl = curl_init();
+            curl_setopt_array($curl, [
+                CURLOPT_URL => 'https://indianpay.co.in/admin/paynow', // Payment gateway API URL
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+                CURLOPT_POSTFIELDS => json_encode($postParameter),
+                CURLOPT_HTTPHEADER => [
+                    'Content-Type: application/json',
+                    'Cookie: ci_session=1ef91dbbd8079592f9061d5df3107fd55bd7fb83' // If necessary, replace with correct session or token
+                ],
+            ]);
+
+            $response = curl_exec($curl);
+            curl_close($curl);
+
+            $response = json_decode($response, true);
+            // dd($response);
+        //  dd($response); die();
+            // Check if payment link is returned from the payment gateway
+            if (isset($response['payment_link']) && !empty($response['payment_link'])) {
+                // Create booking record with transaction_id
+                $booking = Booking::create(array_merge($request->all(), ['transaction_id' => $transactionId, 
+                                    'redirect_url' => "https://handyman.mobileappdemo.net/api/check_payment?transaction_id=$transactionId" ]));
+        
+                return response()->json([
+                    'message' => 'Booking created successfully!',
+                    'success' => true,
+                    'payment_link' => $response['payment_link']
+                ], 200);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment gateway error, no payment link returned!'
+                ], 200);
+            }
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found!'
+            ], 200);
+        }
+    }
+
+if ($request->payment_through == 2) {
+    $userId = $request->user_id;
+    $totalAmount = $request->total_amount;
+
+    $user = DB::table('user_details')->where('id', $userId)->first();
+
+    if ($user) {
+        // Check if wallet balance is sufficient
+        if ($user->wallet_amount >= $totalAmount) {
+            // Create booking record with transaction_id
+            $booking = Booking::create(array_merge($request->all(), ['transaction_id' => $transactionId]));
+
+            // Deduct the wallet amount
+            $user->wallet_amount -= $totalAmount;
+            DB::table('user_details')->where('id', $userId)->update(['wallet_amount' => $user->wallet_amount]);
+
+            // Update transaction status in bookings table
+            DB::table('bookings')->where('id', $booking->id)->update(['transaction_status' => 2]);
+
+            return response()->json([
+                'message' => 'Booking created successfully and wallet amount deducted!',
+                'success' => true,
+                'data' => $booking
+            ], 200);
+        } else {
+            // Insufficient wallet balance
+            return response()->json([
+                'success' => false,
+                'message' => 'Insufficient wallet balance. Please recharge your wallet.'
+            ], 200);
+        }
+    } else {
+        return response()->json([
+            'success' => false,
+            'message' => 'User not found!'
+        ], 200);
+    }
+}
+
+// If no payment is required, simply create the booking and set status to successful
+$booking = Booking::create(array_merge($request->all(), ['transaction_id' => $transactionId]));
+
+// If no payment was made, set the transaction status to successful
+DB::table('bookings')->where('id', $booking->id)->update(['transaction_status' => 2]);
+
+return response()->json([
+    'message' => 'Booking created successfully!',
+    'success' => true,
+    'data' => $booking
+], 200);
+}
 
 }
 

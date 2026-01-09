@@ -637,6 +637,47 @@ public function filter_by(Request $request)
     ], 200);
 }
 
+public function categories_viewm(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'provider_id' => 'nullable'
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => $validator->errors()->first()
+        ], 200);
+    }
+
+    $provider_id = $request->input('provider_id');
+
+    // ✅ Start Query Builder
+    $query = DB::table('categories')
+        ->select('id', 'name', 'image', 'status', 'created_at', 'updated_at', 'provider_id', 'created_admin');
+
+    // ✅ Filter if provider_id is passed
+    if (!empty($provider_id)) {
+        $query->where('provider_id', $provider_id);
+    }
+
+    // ✅ Fetch Data
+    $categories = $query->get();
+
+    if ($categories->isEmpty()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'No Data Found',
+            'data' => []
+        ], 200);
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Data Found',
+        'data' => $categories
+    ], 200);
+}
 	
 public function shops_add(Request $request)
 {
@@ -5129,6 +5170,49 @@ public function services_update(Request $request)
         'success' => true,
         'message' => 'Service updated successfully',
         'data' => $updatedService
+    ], 200);
+}
+
+
+public function test_mail(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'provider_id' => 'nullable'
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => $validator->errors()->first()
+        ], 200);
+    }
+
+    $provider_id = $request->input('provider_id');
+
+    // ✅ Start Query Builder
+    $query = DB::table('categories')
+        ->select('id', 'name', 'image', 'status', 'created_at', 'updated_at', 'provider_id', 'created_admin');
+
+    // ✅ Filter if provider_id is passed
+    if (!empty($provider_id)) {
+        $query->where('provider_id', $provider_id);
+    }
+
+    // ✅ Fetch Data
+    $categories = $query->get();
+
+    if ($categories->isEmpty()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'No Data Found',
+            'data' => []
+        ], 200);
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Data Found',
+        'data' => $categories
     ], 200);
 }
 

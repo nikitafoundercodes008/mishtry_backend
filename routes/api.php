@@ -189,4 +189,5 @@ Route::get('/check_paymentt', [TestingController::class, 'checkPaymentt']);
 
 
 Route::post('/create-order', [TestingController::class, 'createOrder']);
-
+Route::get('/order-list/all', [BookingController::class, 'Orderlist']);
+Route::get('/order-details-by-id/{id}', [BookingController::class, 'Orderdetailsid']);

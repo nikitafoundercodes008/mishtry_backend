@@ -412,7 +412,107 @@ public function walletcheckPayment(Request $request)
     }
 }
 
+public function Orderlists(Request $request)
+{
+    $transactionId = $request->input('transaction_id');
 
+    // Check if payment is successful by fetching the status from payins table
+    $payment = DB::table('payins')->where('transaction_id', $transactionId)->first();
+
+    if ($payment) {
+        
+        if ($payment->status == 1) {
+            // Update the payment status to '2' (successful)
+            DB::table('payins')->where('transaction_id', $transactionId)->update([
+                'status' => 2
+            ]);
+        }
+
+        // Check if the payment status is '2' (payment is successful)
+        if ($payment->status == 2) {
+            // Update wallet balance for the user
+            $user = DB::table('user_details')->where('id', $payment->user_id)->first();
+
+            if ($user) {
+                $newWalletAmount = $user->wallet_amount + $payment->balance;
+                DB::table('user_details')->where('id', $user->id)->update([
+                    'wallet_amount' => $newWalletAmount
+                ]);
+
+                return response()->json([
+                    'message' => 'Payment successful! Wallet recharged.',
+                    'success' => true,
+                ], 200);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found!'
+                ], 200);
+            }
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment failed or not completed yet.'
+            ], 200);
+        }
+    } else {
+        return response()->json([
+            'success' => false,
+            'message' => 'Transaction not found.'
+        ], 200);
+    }
+}
+
+public function Orderdetailsid(Request $request,$id)
+{
+    $transactionId = $request->input('transaction_id');
+
+    // Check if payment is successful by fetching the status from payins table
+    $payment = DB::table('payins')->where('transaction_id', $transactionId)->first();
+
+    if ($payment) {
+        
+        if ($payment->status == 1) {
+            // Update the payment status to '2' (successful)
+            DB::table('payins')->where('transaction_id', $transactionId)->update([
+                'status' => 2
+            ]);
+        }
+
+        // Check if the payment status is '2' (payment is successful)
+        if ($payment->status == 2) {
+            // Update wallet balance for the user
+            $user = DB::table('user_details')->where('id', $payment->user_id)->first();
+
+            if ($user) {
+                $newWalletAmount = $user->wallet_amount + $payment->balance;
+                DB::table('user_details')->where('id', $user->id)->update([
+                    'wallet_amount' => $newWalletAmount
+                ]);
+
+                return response()->json([
+                    'message' => 'Payment successful! Wallet recharged.',
+                    'success' => true,
+                ], 200);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found!'
+                ], 200);
+            }
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment failed or not completed yet.'
+            ], 200);
+        }
+    } else {
+        return response()->json([
+            'success' => false,
+            'message' => 'Transaction not found.'
+        ], 200);
+    }
+}
 public function rechargehistory($userId)
 {
     

@@ -72,4 +72,6 @@ Route::post('/documents/reject/{id}', [VerificationController::class, 'reject'])
 Route::get('/subcreates', [CategoryController::class, 'subcreates'])->name('subcreates');
 Route::post('/subcategory_store', [CategoryController::class, 'storeSubcategory'])->name('storeSubcategory');
 Route::get('chats_message', [ChatController::class, 'index'])->name('index.chats');
+Route::get('showchats_message', [ChatController::class, 'show'])->name('show.chats');
+Route::get('updatechats_message', [ChatController::class, 'update'])->name('update.chats');
 

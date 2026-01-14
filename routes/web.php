@@ -75,3 +75,10 @@ Route::get('chats_message', [ChatController::class, 'index'])->name('index.chats
 Route::get('showchats_message', [ChatController::class, 'show'])->name('show.chats');
 Route::get('updatechats_message', [ChatController::class, 'update'])->name('update.chats');
 
+
+Route::any('/storeCoupon', [DashboardController::class, 'storeCoupon'])->name('coupon.store');
+Route::get('/settings', [DashboardController::class, 'settings'])->name('settings');
+Route::any('/updateSetting/{id}', [DashboardController::class, 'updateSetting'])->name('updateSetting');
+Route::get('/commission', [DashboardController::class, 'commission'])->name('commission');
+Route::post('/commission/store', [DashboardController::class, 'storeCommission'])->name('commission.store');
+

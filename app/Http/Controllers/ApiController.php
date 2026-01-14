@@ -5216,6 +5216,167 @@ public function test_mail(Request $request)
     ], 200);
 }
 
+
+
+public function handle(Request $request, Closure $next)
+    {
+        $allowedOrigins = [
+            'http://localhost:63232',
+            'http://localhost:3000',
+            'https://mishtiry.com',
+            'https://admin.mishtiry.com',
+        ];
+
+        $origin = $request->headers->get('Origin');
+
+        $response = $next($request);
+
+        if ($origin && in_array($origin, $allowedOrigins)) {
+            $response->headers->set('Access-Control-Allow-Origin', $origin);
+        }
+
+        $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        $response->headers->set('Access-Control-Allow-Credentials', 'true');
+
+        return $response;
+    }
+	
+public function signup(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'full_name'  => 'required|string|max:255',
+        'email'      => 'nullable|email|unique:user_details,email',
+        'phone'      => 'required|regex:/^[0-9]{10}$/|unique:user_details,phone',
+        'password'   => 'required|string|min:6',
+        'role_id'    => 'required|integer',
+        'username'   => 'nullable|string|max:255',
+        'provideo_id' => 'nullable|integer',
+        'select_commission' => 'nullable',
+        'designation' => 'nullable|string|max:255',
+		'fcm_tokens' =>  'nullable',
+		'lat' =>  'nullable',
+		'long' =>  'nullable',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'status' => false,
+            'message' => $validator->errors()->first()
+        ], 200);
+    }
+    $now = Carbon::now();
+    // ✅ Create new user
+    $user = user_details::create([
+        'full_name'        => $request->full_name,
+        'email'            => $request->email,
+        'phone'            => $request->phone,
+        'username'         => $request->username,
+        'password'         => $request->password, // Password hashed
+        'role_id'          => $request->role_id,
+        'provideo_id'      => $request->provideo_id,
+        'select_commission'=> $request->select_commission,
+        'designation'      => $request->designation,
+		'fcm_tokens'      => $request->fcm_tokens,
+        'lat'      => $request->lat,
+        'long'      => $request->long,
+        'status'           => 1,
+        'created_at'       => $now,
+        'updated_at'       => $now,
+    ]);
+
+    return response()->json([
+        'status' => true,
+        'message' => 'User registered successfully',
+        'id' => $user->id,
+        'Documentsstatus' => 0,
+    ], 200);
+}
+   
+public function services_add(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'name'            => 'required',
+        'category_id'     => 'required|integer',
+        'subcategory_id'  => 'nullable',
+		'subcategory_name'  => 'nullable',
+        'city'            => 'required',
+        'type'            => 'nullable',
+        'status'          => 'required',
+        'price'           => 'required|numeric',
+		'mrp_price'       => 'nullable',
+        'discount'        => 'required|numeric',
+        'duration'        => 'required',
+        'duration_mint'   => 'required',
+        'description'     => 'required',
+        'provider_id'     => 'required|integer',
+        'handyman_id'     => 'nullable',
+        'image'           => 'nullable'
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'status'  => false,
+            'message' => $validator->errors()->first()
+        ], 200);
+    }
+
+    $imageUrl = null;
+
+    if ($request->image) {
+
+        $image = preg_replace('/^data:image\/\w+;base64,/', '', $request->image);
+        $image = str_replace(' ', '+', $image);
+        $imageData = base64_decode($image);
+
+        if ($imageData === false) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid base64 image'
+            ], 200);
+        }
+
+        $imageName = time() . '.png';
+        $imageDir  = public_path('image/');
+
+        if (!file_exists($imageDir)) {
+            mkdir($imageDir, 0777, true);
+        }
+
+        file_put_contents($imageDir . $imageName, $imageData);
+
+        // ✅ SAME URL AS YOU MENTIONED
+        $imageUrl = url('public/image/' . $imageName);
+    }
+
+    $id = DB::table('services')->insertGetId([
+        'category_id'      => $request->category_id,
+        'subcategory_id'   => $request->subcategory_id,
+        'subcategory_name' => $request->subcategory_id,
+        'name'             => $request->name,
+        'description'      => $request->description,
+        'image'            => $imageUrl,
+        'price'            => $request->price,
+		'mrp_price'        => $request->mrp_price,
+        'discount'         => $request->discount,
+        'duration'         => $request->duration,
+        'duration_mint'    => $request->duration_mint,
+        'handyman_id'      => $request->handyman_id,
+        'provider_id'      => $request->provider_id,
+        'status'           => $request->status,
+        'city'             => $request->city, // ✅ FIXED
+        'type'             => $request->type,
+        'created_at'       => now(),
+    ]);
+
+    return response()->json([
+        'status'  => true,
+        'message' => 'Service Added Successfully',
+        'id'      => $id,
+        'image'   => $imageUrl
+    ], 200);
+}
+
 }
 
 

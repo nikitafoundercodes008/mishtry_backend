@@ -352,6 +352,57 @@ public function provider_handy_doc(Request $request)
     ], 200);
 }
 
+public function signup(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'full_name'  => 'required|string|max:255',
+        'email'      => 'nullable|email|unique:user_details,email',
+        'phone'      => 'required|regex:/^[0-9]{10}$/|unique:user_details,phone',
+        'password'   => 'required|string|min:6',
+        'role_id'    => 'required|integer',
+        'username'   => 'nullable|string|max:255',
+        'provideo_id' => 'nullable|integer',
+        'select_commission' => 'nullable',
+        'designation' => 'nullable|string|max:255',
+		'fcm_tokens' =>  'nullable',
+		'lat' =>  'nullable',
+		'long' =>  'nullable',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'status' => false,
+            'message' => $validator->errors()->first()
+        ], 200);
+    }
+    $now = Carbon::now();
+    // ✅ Create new user
+    $user = user_details::create([
+        'full_name'        => $request->full_name,
+        'email'            => $request->email,
+        'phone'            => $request->phone,
+        'username'         => $request->username,
+        'password'         => $request->password, // Password hashed
+        'role_id'          => $request->role_id,
+        'provideo_id'      => $request->provideo_id,
+        'select_commission'=> $request->select_commission,
+        'designation'      => $request->designation,
+		'fcm_tokens'      => $request->fcm_tokens,
+        'lat'      => $request->lat,
+        'long'      => $request->long,
+        'status'           => 1,
+        'created_at'       => $now,
+        'updated_at'       => $now,
+    ]);
+
+    return response()->json([
+        'status' => true,
+        'message' => 'User registered successfully',
+        'id' => $user->id,
+        'Documentsstatus' => 0,
+    ], 200);
+}
+
 public function monthly_revenue(Request $request)
 {
     // 🔹 Validate request

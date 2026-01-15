@@ -191,3 +191,12 @@ Route::get('/check_paymentt', [TestingController::class, 'checkPaymentt']);
 Route::post('/create-order', [TestingController::class, 'createOrder']);
 Route::get('/order-list/all', [BookingController::class, 'Orderlist']);
 Route::get('/order-details-by-id/{id}', [BookingController::class, 'Orderdetailsid']);
+
+Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');            
+Route::get('/item', [CategoryController::class, 'index'])->name('item');
+Route::get('/subitem', [CategoryController::class, 'subcategorys'])->name('subitem');
+Route::get('/services', [CategoryController::class, 'services'])->name('services');
+Route::get('/users', [DashboardController::class, 'users'])->name('users');
+Route::get('/users_one/{id}', [DashboardController::class, 'users_one'])->name('users_one');
+Route::get('/reviews', [DashboardController::class, 'reviews'])->name('reviews');
+Route::get('/transaction_details', [DashboardController::class, 'transaction_details'])->name('transaction_details');

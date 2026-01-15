@@ -441,6 +441,57 @@ public function destroy_services($id)
     ], 200);
 }
 
+public function searchData(Request $request)
+{
+    
+    $validator = Validator::make($request->all(), [
+        'query' => 'required',
+
+    ]);
+
+    $validator->stopOnFirstFailure();
+
+    if ($validator->fails()) {
+        return response()->json(['success' => false, 'message' => $validator->errors()->first()],200);
+    }
+    $query = $request->has('query') ? $request->input('query') : null;
+
+    
+
+    $categories = DB::table('categories')
+        ->where('name', 'like', "%$query%")
+        ->select('id', 'name', 'image')
+        ->get();
+
+    $subcategories = DB::table('subcategories')
+        ->where('name', 'like', "%$query%")
+        ->select('id', 'name', 'category_id', 'image')
+        ->get();
+
+    $services = DB::table('services')
+        ->where('name', 'like', "%$query%")
+        ->select('id', 'name', 'subcategory_id', 'image')
+        ->get();
+
+    foreach ($categories as $category) {
+        $category->subcategories = $subcategories->where('category_id', $category->id);
+        foreach ($category->subcategories as $subcategory) {
+            $subcategory->services = $services->where('subcategory_id', $subcategory->id);
+        }
+    }
+
+    $results = [
+        'categories' => $categories,
+        'subcategories' => $subcategories,
+        'services' => $services
+    ];
+
+    return response()->json([
+        'success' => true,
+        'data' => $results,
+    ], 200);
+}
+
 }
 
 

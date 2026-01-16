@@ -61,6 +61,13 @@ Route::get('/sliders/toggle-status/{id}', [DashboardController::class, 'sliderst
 Route::get('/Category_delete/{id}', [DashboardController::class, 'Category_delete'])->name('Category_delete');
 Route::get('/subCategory_delete/{id}', [DashboardController::class, 'subCategory_delete'])->name('subCategory_delete');
 
+Route::post('/categories/update/{id}', [CategoryController::class, 'update'])->name('category.update');
+Route::get('/subcategory/edit/{id}', [CategoryController::class, 'subedit'])->name('subcategorie.edit');   
+Route::post('/subcategory/update/{id}', [CategoryController::class, 'subupdate'])->name('subcategorie.update');
+Route::get('/sliders/toggle-status/{id}', [DashboardController::class, 'sliderstoggleStatus'])->name('sliders.toggleStatus');
+Route::get('/Category_delete/{id}', [DashboardController::class, 'Category_delete'])->name('Category_delete');
+Route::get('/subCategory_delete/{id}', [DashboardController::class, 'subCategory_delete'])->name('subCategory_delete');
+
 Route::delete('/users/{id}', [DashboardController::class, 'destroy'])->name('users.destroy');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::post('/login', [AuthController::class, 'AuthLogin'])->name('Auth.login');

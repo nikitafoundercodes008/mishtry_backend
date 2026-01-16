@@ -140,5 +140,87 @@ public function destroy_details($id)
     ], 200);
 }
 
+public function update($userId)
+{
+    $bankAccount = BankAccount::where('userid', $userId)->get();
 
+    if ($bankAccount->isEmpty()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'No bank accounts found for this user.',
+        ], 200); 
+    } else {
+        return response()->json([
+            'success' => true,
+            'data' => $bankAccount,
+        ], 200); 
+    }
+}
+
+    
+    
+    
+ public function action(Request $request)
+{
+    
+    $validator = Validator::make($request->all(), [
+        'id' => 'required|integer|exists:bank_accounts,id', 
+        'userid' => 'required', 
+        'bankname' => 'nullable|string|max:255',
+        'customername' => 'nullable|string|max:255',
+        'ifsc' => 'nullable|string|max:11',
+        'accountnumber' => 'nullable|string|unique:bank_accounts,accountnumber,' . $request->id, 
+        'status' => 'nullable|in:1,2', 
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'status' => false,
+            'message' => $validator->errors()->first(),
+        ], 200);
+    }
+    $bankAccount = BankAccount::where('id', $request->id)
+        ->where('userid', $request->userid)
+        ->first();
+
+    if (!$bankAccount) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Bank account not found or does not belong to the user.',
+        ], 200); 
+    }
+    $bankAccount->update($request->only([
+        'bankname',
+        'customername',
+        'ifsc',
+        'accountnumber',
+        'status',
+    ]));
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Bank account details updated successfully.',
+        'last_update_id' => $bankAccount->id,
+    ], 200);
+}
+
+
+public function delete($id)
+{
+
+    $bankAccount = BankAccount::find($id);
+
+    if (!$bankAccount) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Bank account not found.',
+        ], 200);
+    }
+    $bankAccount->delete();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Bank account deleted successfully.',
+    ], 200);
+}
 }

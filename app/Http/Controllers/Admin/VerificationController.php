@@ -77,4 +77,22 @@ public function reject($id)
     return redirect()->back()->with('success', 'Document rejected successfully!');
 }
 
+public function paper3y()
+{
+    
+    if (!session()->has('user_id')) {
+        return redirect('/')->withErrors([
+            'login' => 'You must be logged in to access the dashboard.',
+        ]);
+    }
+
+    $papers = DB::table('documents')
+        ->join('providers_details', 'documents.user_id', '=', 'providers_details.id') 
+        ->orderBy('documents.id', 'desc')  
+        ->select('documents.*', 'providers_details.full_name')  
+        ->paginate(10); 
+
+    return view('docverification.doc', compact('papers'));
+}
+
 }

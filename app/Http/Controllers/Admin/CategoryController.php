@@ -128,6 +128,48 @@ public function services()
     return view('service.services', compact('services'));
 }
 
+public function servicesZU()
+{
+    if (!session()->has('user_id')) {
+        return redirect('/')->withErrors([
+            'login' => 'You must be logged in to access the dashboard.',
+        ]);
+    }
+
+    $services = DB::table('services')
+        ->leftJoin('user_details as handyman', 'services.handyman_id', '=', 'handyman.id')
+        ->leftJoin('user_details as provider', 'services.provider_id', '=', 'provider.id')
+        ->select(
+            'services.id',
+            'services.category_id',
+            'services.subcategory_id',
+            'services.subcategory_name',
+            'services.name',
+            'services.description',
+            'services.image',
+            'services.price',
+            'services.discount',
+            'services.duration',
+            'services.provider_id',
+            'services.status',
+            'services.created_at',
+            'services.updated_at',
+            'services.duration_mint',
+            'services.city as ciry ',
+            'services.type',
+            'services.handyman_id',
+            'services.address',
+            'services.user_id',
+            'services.tax',
+            'handyman.full_name as handyman_name',
+            'provider.full_name as provider_name'
+        )
+        ->orderBy('services.id', 'desc')
+        ->paginate(10);
+
+    return view('service.services', compact('services'));
+}
+
 public function servicescategory()
 {
     if (!session()->has('user_id')) {
